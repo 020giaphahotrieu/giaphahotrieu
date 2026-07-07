@@ -1,0 +1,343 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String      @id @default(cuid())
+  email        String      @unique
+  passwordHash String
+  displayName  String
+  isActive     Boolean     @default(true)
+  familyId     String?
+  family       Family?     @relation(fields: [familyId], references: [id])
+  roles        UserRole[]
+  auditLogs    AuditLog[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+model Role {
+  id          String           @id @default(cuid())
+  name        String           @unique
+  description String?
+  users       UserRole[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id          String           @id @default(cuid())
+  action      String           @unique
+  description String?
+  roles       RolePermission[]
+}
+
+model UserRole {
+  userId String
+  roleId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model Family {
+  id           String         @id @default(cuid())
+  name         String
+  originPlace  String?
+  description  String?
+  branches     FamilyBranch[]
+  members      Member[]
+  users        User[]
+  events       Event[]
+  albums       Album[]
+  settings     Setting[]
+  backups      Backup[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model FamilyBranch {
+  id          String   @id @default(cuid())
+  familyId    String
+  name        String
+  description String?
+  family      Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  members     Member[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Member {
+  id             String              @id @default(cuid())
+  familyId       String
+  branchId       String?
+  code           String?             @unique
+  fullName       String
+  givenName      String?
+  generation     Int
+  gender         String              @default("UNKNOWN")
+  lifeStatus     String              @default("UNKNOWN")
+  birthDate      DateTime?
+  deathDate      DateTime?
+  birthTime      String?
+  birthPlace     String?
+  avatarUrl      String?
+  biography      String?
+  family         Family              @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  branch         FamilyBranch?       @relation(fields: [branchId], references: [id])
+  translations   MemberTranslation[]
+  relationshipsA Relationship[]      @relation("RelationshipFrom")
+  relationshipsB Relationship[]      @relation("RelationshipTo")
+  spousesA       Spouse[]            @relation("SpouseA")
+  spousesB       Spouse[]            @relation("SpouseB")
+  childrenAsParent Children[]        @relation("ChildrenParent")
+  childrenAsChild  Children[]        @relation("ChildrenChild")
+  events         Event[]
+  media          MemberMedia[]
+  lunarDateData  LunarDateData[]
+  canChiData     CanChiData[]
+  zodiacData     ZodiacData[]
+  numerologyReports NumerologyReport[]
+  baziReports    BaziReport[]
+  astrologyReports AstrologyReport[]
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@index([familyId, generation])
+}
+
+model MemberTranslation {
+  id        String @id @default(cuid())
+  memberId  String
+  locale    String
+  fullName  String
+  pinyin    String?
+  ipa       String?
+  biography String?
+  member    Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, locale])
+}
+
+model Relationship {
+  id           String           @id @default(cuid())
+  familyId     String
+  fromMemberId String
+  toMemberId   String
+  type         String
+  note         String?
+  fromMember   Member @relation("RelationshipFrom", fields: [fromMemberId], references: [id], onDelete: Cascade)
+  toMember     Member @relation("RelationshipTo", fields: [toMemberId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+
+  @@unique([fromMemberId, toMemberId, type])
+}
+
+model Spouse {
+  id        String   @id @default(cuid())
+  memberAId String
+  memberBId String
+  marriedAt DateTime?
+  endedAt   DateTime?
+  memberA   Member   @relation("SpouseA", fields: [memberAId], references: [id], onDelete: Cascade)
+  memberB   Member   @relation("SpouseB", fields: [memberBId], references: [id], onDelete: Cascade)
+}
+
+model Children {
+  id       String @id @default(cuid())
+  parentId String
+  childId  String
+  parent   Member @relation("ChildrenParent", fields: [parentId], references: [id], onDelete: Cascade)
+  child    Member @relation("ChildrenChild", fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([parentId, childId])
+}
+
+model Event {
+  id          String             @id @default(cuid())
+  familyId    String
+  memberId    String?
+  title       String
+  type        String             @default("CUSTOM")
+  startsAt    DateTime
+  endsAt      DateTime?
+  location    String?
+  description String?
+  family      Family             @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  member      Member?            @relation(fields: [memberId], references: [id])
+  translations EventTranslation[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+}
+
+model EventTranslation {
+  id          String @id @default(cuid())
+  eventId     String
+  locale      String
+  title       String
+  description String?
+  event       Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, locale])
+}
+
+model Album {
+  id          String      @id @default(cuid())
+  familyId    String
+  title       String
+  description String?
+  family      Family      @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  mediaFiles  MediaFile[]
+  createdAt   DateTime    @default(now())
+}
+
+model MediaFile {
+  id          String       @id @default(cuid())
+  familyId    String
+  albumId     String?
+  type        String
+  url         String
+  fileName    String
+  mimeType    String
+  size        Int
+  caption     String?
+  album       Album?       @relation(fields: [albumId], references: [id])
+  members     MemberMedia[]
+  document    Document?
+  createdAt   DateTime     @default(now())
+}
+
+model MemberMedia {
+  memberId String
+  mediaId  String
+  member   Member    @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  media    MediaFile @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@id([memberId, mediaId])
+}
+
+model Document {
+  id          String    @id @default(cuid())
+  mediaFileId String    @unique
+  title       String
+  category    String
+  summary     String?
+  mediaFile   MediaFile @relation(fields: [mediaFileId], references: [id], onDelete: Cascade)
+}
+
+model LunarDateData {
+  id           String   @id @default(cuid())
+  memberId     String?
+  solarDate    DateTime
+  lunarDay     Int
+  lunarMonth   Int
+  lunarYear    Int
+  isLeapMonth  Boolean  @default(false)
+  member       Member?  @relation(fields: [memberId], references: [id])
+}
+
+model CanChiData {
+  id       String  @id @default(cuid())
+  memberId String?
+  yearStem String
+  yearBranch String
+  monthStem String?
+  dayStem String?
+  hourStem String?
+  member   Member? @relation(fields: [memberId], references: [id])
+}
+
+model ZodiacData {
+  id             String  @id @default(cuid())
+  memberId       String?
+  chineseZodiac  String
+  westernZodiac  String?
+  description    String?
+  member         Member? @relation(fields: [memberId], references: [id])
+}
+
+model NumerologyReport {
+  id          String   @id @default(cuid())
+  memberId    String
+  lifePath    Int
+  expression  Int?
+  report      String
+  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+}
+
+model BaziReport {
+  id        String   @id @default(cuid())
+  memberId  String
+  pillars   String
+  summary   String
+  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model IChingReport {
+  id        String   @id @default(cuid())
+  familyId  String?
+  question  String
+  hexagram  String
+  changingLines String?
+  summary   String
+  createdAt DateTime @default(now())
+}
+
+model AstrologyReport {
+  id        String   @id @default(cuid())
+  memberId  String
+  sunSign   String
+  moonSign  String?
+  ascendant String?
+  summary   String
+  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  metadata  String?
+  user      User?    @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Backup {
+  id        String       @id @default(cuid())
+  familyId  String?
+  fileName  String
+  status    String       @default("PENDING")
+  note      String?
+  family    Family?      @relation(fields: [familyId], references: [id])
+  createdAt DateTime     @default(now())
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  familyId  String?
+  key       String
+  value     String
+  family    Family?  @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  updatedAt DateTime @updatedAt
+
+  @@unique([familyId, key])
+}

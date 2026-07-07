@@ -1,0 +1,26 @@
+{
+  "name": "digital-family-heritage-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Professional digital genealogy and family heritage platform.",
+  "workspaces": [
+    "backend",
+    "frontend",
+    "shared"
+  ],
+  "scripts": {
+    "dev": "pnpm --parallel dev",
+    "dev:backend": "pnpm --filter @dfhp/backend dev",
+    "dev:frontend": "pnpm --filter @dfhp/frontend dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "db:migrate": "pnpm --filter @dfhp/backend prisma:migrate",
+    "db:seed": "pnpm --filter @dfhp/backend prisma:seed",
+    "db:studio": "pnpm --filter @dfhp/backend prisma:studio"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}
