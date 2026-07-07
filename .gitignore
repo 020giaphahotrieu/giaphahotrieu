@@ -1,10 +1,9 @@
-node_modules
-dist
-build
+node_modules/
+**/node_modules/
 .env
-.env.local
+.env.*
+dist/
+build/
+coverage/
 *.log
-database/*.db
-database/*.db-journal
-uploads/*
-!uploads/.gitkeep
+.DS_Store
