@@ -13,8 +13,7 @@ LOG_FILE="${PROJECT_DIR}/deploy-production.log"
 FINAL_URL="https://${DOMAIN}"
 
 mkdir -p "$(dirname "$LOG_FILE")"
-exec 3>&1 4>&2
-exec >"$LOG_FILE" 2>&1
+: >"$LOG_FILE"
 
 on_error() {
   local exit_code="$1"
@@ -28,6 +27,9 @@ cd "$PROJECT_DIR"
 
 if [[ "$(id -u)" -eq 0 ]]; then
   sudo() {
+    while [[ "$#" -gt 0 && "$1" == -* ]]; do
+      shift
+    done
     "$@"
   }
 fi
@@ -349,4 +351,4 @@ sudo nginx -t
 sudo systemctl reload nginx
 verify_system
 
-echo "$FINAL_URL" >&3
+echo "$FINAL_URL"
