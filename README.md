@@ -97,6 +97,8 @@ URL mặc định:
 - Backend: `http://localhost:4000/api`
 - Health check: `http://localhost:4000/api/health`
 
+Frontend dùng `VITE_API_URL="/api"` và Vite proxy `/api` sang `http://127.0.0.1:4000`, nên khi mở bằng IP server trong mạng cũng không bị browser gọi nhầm `localhost` của máy người dùng.
+
 ## Build production
 
 ```bash

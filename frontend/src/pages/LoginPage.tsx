@@ -1,5 +1,6 @@
 import { FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 import { login } from "../services/api";
 import { useAuthStore } from "../store/authStore";
 
@@ -17,8 +18,13 @@ export function LoginPage() {
       const result = await login(email, password);
       setSession(result.token, result.user);
       navigate("/");
-    } catch {
-      setError("Không đăng nhập được. Hãy kiểm tra backend, database seed hoặc thông tin tài khoản.");
+    } catch (error) {
+      const message = axios.isAxiosError(error)
+        ? error.response?.data?.message ?? error.message
+        : error instanceof Error
+          ? error.message
+          : "Lỗi không xác định";
+      setError(`Đăng nhập thất bại: ${message}`);
     }
   }
 

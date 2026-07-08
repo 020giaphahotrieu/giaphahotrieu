@@ -3,7 +3,7 @@ import type { ApiResponse, DashboardData, Member, User } from "../types";
 import { useAuthStore } from "../store/authStore";
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:4000/api"
+  baseURL: import.meta.env.VITE_API_URL || "/api"
 });
 
 api.interceptors.request.use((config) => {
@@ -14,11 +14,17 @@ api.interceptors.request.use((config) => {
 
 export async function login(email: string, password: string) {
   const response = await api.post<ApiResponse<{ token: string; user: User }>>("/auth/login", { email, password });
+  if (!response.data.success || !response.data.data?.token || !response.data.data?.user) {
+    throw new Error(response.data.message || "Invalid login response from API");
+  }
   return response.data.data;
 }
 
 export async function register(input: { email: string; password: string; displayName: string; familyName?: string }) {
   const response = await api.post<ApiResponse<{ token: string; user: User }>>("/auth/register", input);
+  if (!response.data.success || !response.data.data?.token || !response.data.data?.user) {
+    throw new Error(response.data.message || "Invalid register response from API");
+  }
   return response.data.data;
 }
 

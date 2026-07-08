@@ -12,7 +12,17 @@ export function createApp() {
   const app = express();
 
   app.use(helmet());
-  app.use(cors({ origin: env.clientUrl, credentials: true }));
+  app.use(
+    cors({
+      origin(origin, callback) {
+        if (!origin || env.nodeEnv !== "production" || env.clientUrls.includes(origin)) {
+          return callback(null, true);
+        }
+        return callback(null, false);
+      },
+      credentials: true
+    })
+  );
   app.use(express.json({ limit: "2mb" }));
   app.use(express.urlencoded({ extended: true }));
   app.use(morgan(env.nodeEnv === "production" ? "combined" : "dev"));
