@@ -17,7 +17,8 @@
     "typecheck": "pnpm -r typecheck",
     "db:migrate": "pnpm --filter @dfhp/backend prisma:migrate",
     "db:seed": "pnpm --filter @dfhp/backend prisma:seed",
-    "db:studio": "pnpm --filter @dfhp/backend prisma:studio"
+    "db:studio": "pnpm --filter @dfhp/backend prisma:studio",
+    "admin:ensure": "pnpm --filter @dfhp/backend admin:ensure"
   },
   "engines": {
     "node": ">=20.0.0",
