@@ -1,22 +1,16 @@
 # Production Deployment
 
-Target: Ubuntu 24 VPS, domain `giaphahotrieu.vn`, PM2, Nginx, Let's Encrypt.
+The canonical guide lives at the repository root: [PRODUCTION.md](../PRODUCTION.md).
 
-The deployment script:
-
-- Installs Node.js 20, pnpm, PM2, Nginx, Certbot, SQLite and UFW.
-- Builds frontend and backend.
-- Creates an idempotent production admin with `admin@example.com / Admin@123456`.
-- Starts backend with PM2 and enables startup after reboot.
-- Serves frontend from Nginx.
-- Proxies `/api` and `/uploads` to backend port `4000`.
-- Requests and installs SSL using Let's Encrypt.
-- Enables firewall rules for SSH and Nginx.
-- Tests health and login endpoints.
-
-Run from the project root:
+Quick reference:
 
 ```bash
-chmod +x scripts/production/bootstrap-vps.sh
-CERTBOT_EMAIL=admin@giaphahotrieu.vn ./scripts/production/bootstrap-vps.sh
+# Everything, on a fresh or existing Ubuntu 24.04 VPS:
+bash <(curl -fsSL https://raw.githubusercontent.com/020giaphahotrieu/giaphahotrieu/main/scripts/production/install.sh)
+
+# Enable HTTPS once DNS points to the server:
+pnpm ssl:enable
+
+# Resume an interrupted deployment:
+pnpm deploy:resume
 ```

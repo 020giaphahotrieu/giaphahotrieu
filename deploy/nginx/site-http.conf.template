@@ -1,14 +1,21 @@
+# Rendered by scripts/production — do not edit on the server; changes will be
+# overwritten on the next deployment. Edit the template in the repository.
+# Mode: HTTP only (used until a Let's Encrypt certificate is available).
+
 limit_req_zone $binary_remote_addr zone=giaphahotrieu_api:10m rate=10r/s;
 
 server {
     listen 80;
-    listen [::]:80;
-    server_name giaphahotrieu.vn;
+    __LISTEN_80_V6__
+    server_name __SERVER_NAMES__;
 
-    root /var/www/giaphahotrieu.vn/frontend/dist;
+    root __DEPLOY_ROOT__/frontend/dist;
     index index.html;
-
     client_max_body_size 25M;
+
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript image/svg+xml;
+    gzip_min_length 1024;
 
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;
@@ -16,13 +23,23 @@ server {
     add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
 
     location ^~ /.well-known/acme-challenge/ {
-        root /var/www/letsencrypt;
+        root __ACME_WEBROOT__;
         default_type "text/plain";
     }
 
     location /api/ {
         limit_req zone=giaphahotrieu_api burst=30 nodelay;
-        proxy_pass http://127.0.0.1:4000/api/;
+        proxy_pass http://127.0.0.1:__APP_PORT__/api/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
+    }
+
+    location /uploads/ {
+        proxy_pass http://127.0.0.1:__APP_PORT__/uploads/;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -30,13 +47,11 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    location /uploads/ {
-        proxy_pass http://127.0.0.1:4000/uploads/;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+    location ~* \.(?:css|js|jpg|jpeg|gif|png|webp|ico|svg|woff2?)$ {
+        expires 30d;
+        access_log off;
+        add_header Cache-Control "public, immutable";
+        try_files $uri =404;
     }
 
     location ~ /\.(?!well-known) {

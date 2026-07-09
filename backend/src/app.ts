@@ -11,6 +11,11 @@ import { notFound } from "./middlewares/notFound.js";
 export function createApp() {
   const app = express();
 
+  // The app always sits behind exactly one reverse proxy (nginx) in
+  // production. Without this, express-rate-limit v7 rejects requests that
+  // carry X-Forwarded-For and every client would share one rate-limit bucket.
+  app.set("trust proxy", 1);
+
   app.use(helmet());
   app.use(
     cors({

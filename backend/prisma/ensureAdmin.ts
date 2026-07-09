@@ -75,23 +75,33 @@ async function main() {
       }
     }));
 
+  // Deployments are idempotent: an existing admin's password is never touched
+  // (they may have changed it in the app). Set ADMIN_RESET_PASSWORD=1 to force
+  // a reset back to ADMIN_PASSWORD, e.g. after losing access.
+  const forceResetPassword = /^(1|true|yes)$/i.test(process.env.ADMIN_RESET_PASSWORD ?? "");
+  const existing = await prisma.user.findUnique({ where: { email: adminEmail } });
   const passwordHash = await bcrypt.hash(adminPassword, 12);
-  const admin = await prisma.user.upsert({
-    where: { email: adminEmail },
-    create: {
-      email: adminEmail,
-      passwordHash,
-      displayName: "Super Admin",
-      familyId: family.id,
-      isActive: true
-    },
-    update: {
-      passwordHash,
-      displayName: "Super Admin",
-      familyId: family.id,
-      isActive: true
-    }
-  });
+  const admin = existing
+    ? await prisma.user.update({
+        where: { email: adminEmail },
+        data: {
+          isActive: true,
+          familyId: existing.familyId ?? family.id,
+          ...(forceResetPassword ? { passwordHash } : {})
+        }
+      })
+    : await prisma.user.create({
+        data: {
+          email: adminEmail,
+          passwordHash,
+          displayName: "Super Admin",
+          familyId: family.id,
+          isActive: true
+        }
+      });
+  if (existing && forceResetPassword) {
+    console.log("Admin password was reset (ADMIN_RESET_PASSWORD).");
+  }
 
   await prisma.userRole.upsert({
     where: {

@@ -106,13 +106,13 @@ pnpm build
 pnpm --filter @dfhp/backend start
 ```
 
-Triển khai cơ bản:
+Triển khai production (Ubuntu 24.04 VPS) đã được tự động hóa hoàn toàn — xem [PRODUCTION.md](PRODUCTION.md). Chỉ cần một lệnh trên VPS:
 
-1. Tạo database PostgreSQL production.
-2. Cấu hình `DATABASE_URL`, `JWT_SECRET`, `CLIENT_URL`, `UPLOAD_DIR`.
-3. Chạy `pnpm install --frozen-lockfile`, `pnpm db:migrate`, `pnpm build`.
-4. Serve `frontend/dist` bằng Nginx/CDN và chạy backend bằng PM2/Systemd/container.
-5. Đưa uploads sang object storage như S3/R2 khi lên production.
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/020giaphahotrieu/giaphahotrieu/main/scripts/production/install.sh)
+```
+
+Script tự cài Node/pnpm/PM2/Nginx/Certbot, build, cấu hình reverse proxy, firewall, tự kiểm tra DNS và cấp SSL khi DNS sẵn sàng (nếu DNS chưa trỏ về server, site chạy HTTP và nâng cấp sau bằng `pnpm ssl:enable`). Deploy lại: `pnpm deploy` · tiếp tục deploy dở dang: `pnpm deploy:resume`.
 
 ## Backup và restore
 

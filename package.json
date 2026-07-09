@@ -18,8 +18,12 @@
     "db:migrate": "pnpm --filter @dfhp/backend prisma:migrate",
     "db:seed": "pnpm --filter @dfhp/backend prisma:seed",
     "db:studio": "pnpm --filter @dfhp/backend prisma:studio",
-    "admin:ensure": "pnpm --filter @dfhp/backend admin:ensure"
+    "admin:ensure": "pnpm --filter @dfhp/backend admin:ensure",
+    "deploy": "bash scripts/production/bootstrap-vps.sh",
+    "deploy:resume": "bash scripts/production/bootstrap-vps.sh --resume",
+    "ssl:enable": "bash scripts/production/enable-ssl.sh"
   },
+  "packageManager": "pnpm@11.7.0",
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=9.0.0"

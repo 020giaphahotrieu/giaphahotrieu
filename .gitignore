@@ -1,9 +1,30 @@
+# Dependencies and package-manager caches
 node_modules/
 **/node_modules/
+.pnpm-store/
+
+# Environment files (examples stay tracked)
 .env
 .env.*
+!.env.example
+
+# Build output
 dist/
 build/
 coverage/
+
+# Runtime data — never version the production database or user uploads
+database/*.db
+database/*.db-*
+database/backups/
+uploads/*
+!uploads/.gitkeep
+
+# Deployment state and logs
+.deploy/
+logs/
 *.log
+
+# Editor / OS noise
+*.swp
 .DS_Store
